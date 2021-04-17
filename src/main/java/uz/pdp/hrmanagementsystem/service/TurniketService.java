@@ -1,6 +1,7 @@
 package uz.pdp.hrmanagementsystem.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import uz.pdp.hrmanagementsystem.entity.Turniket;
 import uz.pdp.hrmanagementsystem.entity.TurniketHistory;
@@ -30,14 +31,7 @@ public class TurniketService {
     keldi ketdini turniket historyga yozib qo'yuvchi metod
      */
     public ApiResponse enterExit(HttpServletRequest request) {
-        String token = request.getHeader("Authorization");
-        token = token.substring(7);
-        String email = jwtProvider.getEmailFromToken(token);
-
-        Optional<User> optionalUser = userRepository.findByEmail(email);
-        if (!optionalUser.isPresent())
-            return new ApiResponse("Employee not found", false);
-        User user = optionalUser.get();
+        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Optional<Turniket> turniketOptional = turniketRepository.findByOwner(user);
         if (!turniketOptional.isPresent())
             return new ApiResponse("Sizga turniket berilmagan", false);
@@ -66,11 +60,8 @@ public class TurniketService {
     turniket info ni qaaytaruvchi metod
      */
     public Turniket getTurniketInfo(HttpServletRequest httpServletRequest) {
-        String token = httpServletRequest.getHeader("Authorization");
-        token = token.substring(7);
-        String userNameFromToken = jwtProvider.getEmailFromToken(token);
-        Optional<User> optionalUser = userRepository.findByEmail(userNameFromToken);
-        Optional<Turniket> byOwner = turniketRepository.findByOwner(optionalUser.get());
-        return byOwner.orElseGet(null);
+        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Optional<Turniket> byOwner = turniketRepository.findByOwner(user);
+        return byOwner.orElse(null);
     }
 }

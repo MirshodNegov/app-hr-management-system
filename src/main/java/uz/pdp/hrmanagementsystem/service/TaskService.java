@@ -3,6 +3,8 @@ package uz.pdp.hrmanagementsystem.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import uz.pdp.hrmanagementsystem.entity.Task;
 import uz.pdp.hrmanagementsystem.entity.User;
@@ -37,11 +39,7 @@ public class TaskService {
     TaskDto da topshiriq nomi , izohi , muddati , bajaruvchi emaili keladi
      */
     public ApiResponse addTask(TaskDto taskDto, HttpServletRequest request) {
-        String token = request.getHeader("Authorization");
-        token = token.substring(7);
-        String email = jwtProvider.getEmailFromToken(token);
-        Optional<User> userOptional = userRepository.findByEmail(email);
-        User taskGiver = userOptional.get();
+        User taskGiver = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Task task = new Task();
         task.setName(taskDto.getName());
         task.setDescription(taskDto.getDescription());
@@ -134,7 +132,7 @@ public class TaskService {
     Managerlar bergan topshiriqlarini qayataradi
      */
     public List<Task> getGivenTasks(HttpServletRequest request) {
-        User user = (User) request.getUserPrincipal();
+        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         return taskRepository.findAllByTaskGiverId(user.getId());
     }
 
